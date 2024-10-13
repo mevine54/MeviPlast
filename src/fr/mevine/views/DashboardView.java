@@ -214,10 +214,12 @@ public class DashboardView extends JFrame {
             // Ajouter l'achat à l'historique
             for (Object[] achat : achatsValides) {
                 Object[] achatHistorique = {
-                        "13/10/2024", clientCombo.getSelectedItem(),
+                        "13/10/2024",
+                        clientCombo.getSelectedItem(), // Nom du client
                         achat[0], // Médicament
                         achat[1], // Quantité
-                        String.format("%.2f", achat[2]) // Prix total
+                        String.format("%.2f", achat[2]), // Prix total
+                        medecinCombo.getSelectedItem()  // Nom du médecin (si achat via ordonnance)
                 };
                 achatsHistorique.add(achatHistorique); // Ajouter à la liste d'historique
             }
@@ -269,13 +271,14 @@ public class DashboardView extends JFrame {
         JPanel panelHistorique = new JPanel();
         panelHistorique.setLayout(new BoxLayout(panelHistorique, BoxLayout.Y_AXIS));
         panelHistorique.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        panelHistorique.setBackground(new Color(230, 255, 230)); // Appliquer la même couleur que la page achat
 
         // Label pour le titre
         JLabel labelHistorique = new JLabel("Historique des achats");
         labelHistorique.setFont(new Font("Arial", Font.BOLD, 18));
 
-        // Tableau pour afficher les achats
-        String[] colonnes = {"Date", "Client", "Médicament", "Quantité", "Prix total"};
+        // Tableau pour afficher les achats avec les colonnes supplémentaires
+        String[] colonnes = {"Date", "Client", "Médicament", "Quantité", "Prix total", "Médecin"};
         Object[][] achats = achatsHistorique.toArray(new Object[0][]);
 
         tableModel = new DefaultTableModel(achats, colonnes);
@@ -284,7 +287,6 @@ public class DashboardView extends JFrame {
 
         // Bouton pour modifier l'achat sélectionné
         JButton btnModifierAchat = new JButton("Modifier l'achat sélectionné");
-        // Ajout dans le bloc de modification de l'achat sélectionné
         btnModifierAchat.addActionListener(e -> {
             int selectedRow = tableAchats.getSelectedRow();
             if (selectedRow != -1) {
