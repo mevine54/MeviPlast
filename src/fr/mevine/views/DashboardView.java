@@ -284,12 +284,14 @@ public class DashboardView extends JFrame {
 
         // Bouton pour modifier l'achat sélectionné
         JButton btnModifierAchat = new JButton("Modifier l'achat sélectionné");
+        // Ajout dans le bloc de modification de l'achat sélectionné
         btnModifierAchat.addActionListener(e -> {
             int selectedRow = tableAchats.getSelectedRow();
             if (selectedRow != -1) {
                 // Ouvre une boîte de dialogue pour modifier le médicament et la quantité
                 String medicament = (String) tableAchats.getValueAt(selectedRow, 2);
                 String quantite = (String) tableAchats.getValueAt(selectedRow, 3);
+                double prixUnitaire = 5.00; // Prix unitaire par défaut (tu peux l'adapter si nécessaire)
 
                 JPanel modificationPanel = new JPanel(new GridLayout(2, 2));
                 modificationPanel.add(new JLabel("Médicament:"));
@@ -304,8 +306,14 @@ public class DashboardView extends JFrame {
 
                 if (result == JOptionPane.OK_OPTION) {
                     // Mettre à jour la table avec les nouvelles valeurs
-                    tableAchats.setValueAt(medicamentField.getText(), selectedRow, 2);
-                    tableAchats.setValueAt(quantiteField.getText(), selectedRow, 3);
+                    tableAchats.setValueAt(medicamentField.getText(), selectedRow, 2);  // Mettre à jour le médicament
+                    tableAchats.setValueAt(quantiteField.getText(), selectedRow, 3);  // Mettre à jour la quantité
+
+                    // Recalculer le prix total basé sur la nouvelle quantité
+                    int nouvelleQuantite = Integer.parseInt(quantiteField.getText());
+                    double nouveauPrixTotal = prixUnitaire * nouvelleQuantite;
+                    tableAchats.setValueAt(String.format("%.2f", nouveauPrixTotal), selectedRow, 4);  // Mettre à jour le prix total
+
                     JOptionPane.showMessageDialog(this, "L'achat a été modifié !");
                 }
             } else {
