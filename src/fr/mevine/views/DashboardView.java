@@ -297,21 +297,36 @@ public class DashboardView extends JFrame {
 
         // Bouton pour modifier l'achat sélectionné
         JButton btnModifierAchat = new JButton("Modifier l'achat sélectionné");
+        // Ajout de la fonctionnalité de modification du médecin et du client
         btnModifierAchat.addActionListener(e -> {
             int selectedRow = tableAchats.getSelectedRow();
             if (selectedRow != -1) {
-                // Ouvre une boîte de dialogue pour modifier le médicament et la quantité
+                // Ouvre une boîte de dialogue pour modifier le médicament, la quantité, le médecin et le client
                 String medicament = (String) tableAchats.getValueAt(selectedRow, 2);
                 String quantite = (String) tableAchats.getValueAt(selectedRow, 3);
+                String client = (String) tableAchats.getValueAt(selectedRow, 1);
+                String medecin = (String) tableAchats.getValueAt(selectedRow, 5);  // Médecin
+
                 double prixUnitaire = 5.00; // Prix unitaire par défaut (tu peux l'adapter si nécessaire)
 
-                JPanel modificationPanel = new JPanel(new GridLayout(2, 2));
+                JPanel modificationPanel = new JPanel(new GridLayout(4, 2));
                 modificationPanel.add(new JLabel("Médicament:"));
                 JTextField medicamentField = new JTextField(medicament);
                 modificationPanel.add(medicamentField);
+
                 modificationPanel.add(new JLabel("Quantité:"));
                 JTextField quantiteField = new JTextField(quantite);
                 modificationPanel.add(quantiteField);
+
+                modificationPanel.add(new JLabel("Client:"));
+                JComboBox<String> clientCombo = new JComboBox<>(getListeClients());
+                clientCombo.setSelectedItem(client);  // Sélectionner le client actuel
+                modificationPanel.add(clientCombo);
+
+                modificationPanel.add(new JLabel("Médecin:"));
+                JComboBox<String> medecinCombo = new JComboBox<>(getListeMedecins());
+                medecinCombo.setSelectedItem(medecin);  // Sélectionner le médecin actuel
+                modificationPanel.add(medecinCombo);
 
                 int result = JOptionPane.showConfirmDialog(this, modificationPanel, "Modifier l'achat",
                         JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
@@ -319,7 +334,9 @@ public class DashboardView extends JFrame {
                 if (result == JOptionPane.OK_OPTION) {
                     // Mettre à jour la table avec les nouvelles valeurs
                     tableAchats.setValueAt(medicamentField.getText(), selectedRow, 2);  // Mettre à jour le médicament
-                    tableAchats.setValueAt(quantiteField.getText(), selectedRow, 3);  // Mettre à jour la quantité
+                    tableAchats.setValueAt(quantiteField.getText(), selectedRow, 3);    // Mettre à jour la quantité
+                    tableAchats.setValueAt(clientCombo.getSelectedItem(), selectedRow, 1);  // Mettre à jour le client
+                    tableAchats.setValueAt(medecinCombo.getSelectedItem(), selectedRow, 5); // Mettre à jour le médecin
 
                     // Recalculer le prix total basé sur la nouvelle quantité
                     int nouvelleQuantite = Integer.parseInt(quantiteField.getText());
