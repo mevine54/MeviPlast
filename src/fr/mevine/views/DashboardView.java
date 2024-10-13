@@ -1,12 +1,15 @@
 package fr.mevine.views;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.ArrayList;
 
 public class DashboardView extends JFrame {
 
     private JPanel panelCentral;
+    private DefaultTableModel tableModel; // Modèle de table pour l'historique
+    private ArrayList<Object[]> achatsHistorique = new ArrayList<>(); // Liste pour stocker les achats
 
     public DashboardView() {
         // Paramètres de base de la fenêtre
@@ -95,7 +98,7 @@ public class DashboardView extends JFrame {
         return button;
     }
 
-    // Page d'achat
+    // Page d'achat restaurée avec tout le contenu
     private void afficherAchatPanel() {
         panelCentral.removeAll();
 
@@ -132,6 +135,14 @@ public class DashboardView extends JFrame {
         JTextField prixTotalField = new JTextField("5.00", 10);
         prixTotalField.setEditable(false);
 
+        // Ajouter un écouteur pour mettre à jour le prix total en fonction de la quantité
+        quantiteField.addActionListener(e -> {
+            double prixUnitaire = Double.parseDouble(prixUnitaireField.getText());
+            int quantite = Integer.parseInt(quantiteField.getText());
+            double prixTotal = prixUnitaire * quantite;
+            prixTotalField.setText(String.format("%.2f", prixTotal));
+        });
+
         // Liste des médicaments ajoutés
         JLabel labelMedicamentsAjoutes = new JLabel("Médicaments ajoutés:");
         JTextArea medicamentsAjoutesArea = new JTextArea(5, 20);
@@ -140,20 +151,26 @@ public class DashboardView extends JFrame {
         // Bouton pour ajouter le médicament
         JButton btnAjouterMedicament = new JButton("Ajouter médicament");
         ArrayList<String> listeMedicamentsAjoutes = new ArrayList<>();
+        ArrayList<Object[]> achatsValides = new ArrayList<>();
 
         btnAjouterMedicament.addActionListener(e -> {
             String selectedMedicament = (String) medicamentCombo.getSelectedItem();
             String quantite = quantiteField.getText();
             double prixUnitaire = Double.parseDouble(prixUnitaireField.getText());
             double prixTotal = prixUnitaire * Integer.parseInt(quantite);
-            listeMedicamentsAjoutes.add(selectedMedicament + " (x" + quantite + ") - Prix: " + prixTotal + " €");
+            String medicamentDetail = selectedMedicament + " (x" + quantite + ") - Prix: " + prixTotal + " €";
+            listeMedicamentsAjoutes.add(medicamentDetail);
 
             // Mise à jour de la textArea
             medicamentsAjoutesArea.setText(String.join("\n", listeMedicamentsAjoutes));
 
-            // Remettre le champ quantité à 1
+            // Stocker les achats validés
+            Object[] achat = {selectedMedicament, quantite, prixTotal};
+            achatsValides.add(achat);
+
+            // Remettre le champ quantité à 1 et mettre à jour le prix total
             quantiteField.setText("1");
-            prixTotalField.setText("");
+            prixTotalField.setText("5.00");
         });
 
         // Ajout dynamique pour le choix du médecin et du client si "Achat via ordonnance"
@@ -193,6 +210,18 @@ public class DashboardView extends JFrame {
         JButton btnValiderAchat = new JButton("Valider l'achat");
         btnValiderAchat.addActionListener(e -> {
             JOptionPane.showMessageDialog(this, "Votre achat a bien été pris en compte !");
+
+            // Ajouter l'achat à l'historique
+            for (Object[] achat : achatsValides) {
+                Object[] achatHistorique = {
+                        "13/10/2024", clientCombo.getSelectedItem(),
+                        achat[0], // Médicament
+                        achat[1], // Quantité
+                        String.format("%.2f", achat[2]) // Prix total
+                };
+                achatsHistorique.add(achatHistorique); // Ajouter à la liste d'historique
+            }
+
             revenirAccueil();  // Retourner à l'accueil après validation
         });
 
@@ -232,6 +261,134 @@ public class DashboardView extends JFrame {
         panelCentral.repaint();
     }
 
+    // Page d'historique des achats avec possibilité de modifier
+    private void afficherHistoriquePanel() {
+        panelCentral.removeAll();
+
+        // Panneau pour l'historique des achats
+        JPanel panelHistorique = new JPanel();
+        panelHistorique.setLayout(new BoxLayout(panelHistorique, BoxLayout.Y_AXIS));
+        panelHistorique.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+
+        // Label pour le titre
+        JLabel labelHistorique = new JLabel("Historique des achats");
+        labelHistorique.setFont(new Font("Arial", Font.BOLD, 18));
+
+        // Tableau pour afficher les achats
+        String[] colonnes = {"Date", "Client", "Médicament", "Quantité", "Prix total"};
+        Object[][] achats = achatsHistorique.toArray(new Object[0][]);
+
+        tableModel = new DefaultTableModel(achats, colonnes);
+        JTable tableAchats = new JTable(tableModel);
+        JScrollPane scrollPane = new JScrollPane(tableAchats);
+
+        // Bouton pour modifier l'achat sélectionné
+        JButton btnModifierAchat = new JButton("Modifier l'achat sélectionné");
+        btnModifierAchat.addActionListener(e -> {
+            int selectedRow = tableAchats.getSelectedRow();
+            if (selectedRow != -1) {
+                // Ouvre une boîte de dialogue pour modifier le médicament et la quantité
+                String medicament = (String) tableAchats.getValueAt(selectedRow, 2);
+                String quantite = (String) tableAchats.getValueAt(selectedRow, 3);
+
+                JPanel modificationPanel = new JPanel(new GridLayout(2, 2));
+                modificationPanel.add(new JLabel("Médicament:"));
+                JTextField medicamentField = new JTextField(medicament);
+                modificationPanel.add(medicamentField);
+                modificationPanel.add(new JLabel("Quantité:"));
+                JTextField quantiteField = new JTextField(quantite);
+                modificationPanel.add(quantiteField);
+
+                int result = JOptionPane.showConfirmDialog(this, modificationPanel, "Modifier l'achat",
+                        JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+
+                if (result == JOptionPane.OK_OPTION) {
+                    // Mettre à jour la table avec les nouvelles valeurs
+                    tableAchats.setValueAt(medicamentField.getText(), selectedRow, 2);
+                    tableAchats.setValueAt(quantiteField.getText(), selectedRow, 3);
+                    JOptionPane.showMessageDialog(this, "L'achat a été modifié !");
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Veuillez sélectionner un achat à modifier.");
+            }
+        });
+
+        // Bouton retour et quitter
+        JButton btnRetour = new JButton("Retour");
+        btnRetour.addActionListener(e -> revenirAccueil());
+
+        JButton btnQuitter = new JButton("Quitter");
+        btnQuitter.addActionListener(e -> System.exit(0));
+
+        // Ajout des composants au panneau d'historique
+        panelHistorique.add(labelHistorique);
+        panelHistorique.add(Box.createRigidArea(new Dimension(0, 10)));
+        panelHistorique.add(scrollPane);
+        panelHistorique.add(Box.createRigidArea(new Dimension(0, 10)));
+        panelHistorique.add(btnModifierAchat);
+        panelHistorique.add(Box.createRigidArea(new Dimension(0, 10)));
+        panelHistorique.add(btnRetour);
+        panelHistorique.add(btnQuitter);
+
+        // Remplacer le contenu du panneau central
+        panelCentral.add(panelHistorique);
+        panelCentral.revalidate();
+        panelCentral.repaint();
+    }
+
+    // Méthode pour revenir à la page d'accueil
+    private void revenirAccueil() {
+        JPanel panel = new JPanel();
+        JLabel label = new JLabel("Bienvenue dans la Pharmacie Sparadrap");
+        panel.add(label);
+
+        // Remplacer le contenu du panneau central
+        panelCentral.removeAll();
+        panelCentral.add(panel);
+        panelCentral.revalidate();
+        panelCentral.repaint();
+    }
+
+    // Page pour afficher les détails d'un médecin / spécialiste
+    private void afficherMedecinPanel() {
+        panelCentral.removeAll();
+
+        // Contenu temporaire, à ajuster selon les besoins
+        JPanel panelMedecin = new JPanel();
+        JLabel label = new JLabel("Détails des médecins / spécialistes");
+        panelMedecin.add(label);
+
+        // Bouton retour pour revenir à la page d'accueil
+        JButton btnRetour = new JButton("Retour");
+        btnRetour.addActionListener(e -> revenirAccueil());
+        panelMedecin.add(btnRetour);
+
+        // Remplacer le contenu du panneau central
+        panelCentral.add(panelMedecin);
+        panelCentral.revalidate();
+        panelCentral.repaint();
+    }
+
+    // Page pour afficher les détails d'un client
+    private void afficherClientPanel() {
+        panelCentral.removeAll();
+
+        // Contenu temporaire, à ajuster selon les besoins
+        JPanel panelClient = new JPanel();
+        JLabel label = new JLabel("Détails des clients");
+        panelClient.add(label);
+
+        // Bouton retour pour revenir à la page d'accueil
+        JButton btnRetour = new JButton("Retour");
+        btnRetour.addActionListener(e -> revenirAccueil());
+        panelClient.add(btnRetour);
+
+        // Remplacer le contenu du panneau central
+        panelCentral.add(panelClient);
+        panelCentral.revalidate();
+        panelCentral.repaint();
+    }
+
     // Liste simulée des médecins
     private String[] getListeMedecins() {
         return new String[] {
@@ -248,31 +405,6 @@ public class DashboardView extends JFrame {
                 "Marie Dupuis",
                 "Jean Leclerc"
         };
-    }
-
-    // Autres méthodes pour gérer les pages du menu...
-    private void afficherHistoriquePanel() {
-        revenirAccueil();
-    }
-
-    private void afficherMedecinPanel() {
-        revenirAccueil();
-    }
-
-    private void afficherClientPanel() {
-        revenirAccueil();
-    }
-
-    private void revenirAccueil() {
-        JPanel panel = new JPanel();
-        JLabel label = new JLabel("Bienvenue dans la Pharmacie Sparadrap");
-        panel.add(label);
-
-        // Remplacer le contenu du panneau central
-        panelCentral.removeAll();
-        panelCentral.add(panel);
-        panelCentral.revalidate();
-        panelCentral.repaint();
     }
 
     // Méthode principale
