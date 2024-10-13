@@ -208,8 +208,18 @@ public class DashboardView extends JFrame {
         btnRetour.addActionListener(e -> revenirAccueil());
 
         JButton btnValiderAchat = new JButton("Valider l'achat");
+        // Ajout d'une condition pour ne pas afficher le médecin pour les achats directs dans la méthode `afficherAchatPanel()`
+
         btnValiderAchat.addActionListener(e -> {
             JOptionPane.showMessageDialog(this, "Votre achat a bien été pris en compte !");
+
+            // Déterminer si l'achat est avec ou sans ordonnance
+            String typeAchat = (String) typeAchatCombo.getSelectedItem();
+            String medecinSelectionne = "";
+            if ("Achat via ordonnance".equals(typeAchat)) {
+                // Si c'est un achat avec ordonnance, récupérer le médecin
+                medecinSelectionne = (String) medecinCombo.getSelectedItem();
+            }
 
             // Ajouter l'achat à l'historique
             for (Object[] achat : achatsValides) {
@@ -219,7 +229,7 @@ public class DashboardView extends JFrame {
                         achat[0], // Médicament
                         achat[1], // Quantité
                         String.format("%.2f", achat[2]), // Prix total
-                        medecinCombo.getSelectedItem()  // Nom du médecin (si achat via ordonnance)
+                        medecinSelectionne // Nom du médecin (vide si achat direct)
                 };
                 achatsHistorique.add(achatHistorique); // Ajouter à la liste d'historique
             }
