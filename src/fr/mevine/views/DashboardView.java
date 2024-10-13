@@ -103,6 +103,7 @@ public class DashboardView extends JFrame {
         JPanel panelAchat = new JPanel();
         panelAchat.setLayout(new BoxLayout(panelAchat, BoxLayout.Y_AXIS));
         panelAchat.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        panelAchat.setBackground(new Color(230, 255, 230)); // Couleur vert très clair
 
         // Label dynamique pour indiquer le type d'achat avec une plus grande police
         JLabel labelAchatType = new JLabel("Achat direct sélectionné");
@@ -181,7 +182,7 @@ public class DashboardView extends JFrame {
                 labelAchatType.setText("Achat direct sélectionné");
                 labelMedecin.setVisible(false);
                 medecinCombo.setVisible(false);
-                labelClient.setVisible(false);
+                labelClient.setVisible(false);  // Cacher le champ client pour achat direct
             }
         });
 
@@ -191,7 +192,7 @@ public class DashboardView extends JFrame {
 
         JButton btnValiderAchat = new JButton("Valider l'achat");
         btnValiderAchat.addActionListener(e -> {
-            JOptionPane.showMessageDialog(this, "Achat validé et historisé !");
+            JOptionPane.showMessageDialog(this, "Votre achat a bien été pris en compte !");
             revenirAccueil();  // Retourner à l'accueil après validation
         });
 
